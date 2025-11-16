@@ -19,7 +19,7 @@
         }
 
         .container {
-            max-width: 1200px;
+            max-width: 1400px;
             margin: 0 auto;
             background: white;
             border-radius: 15px;
@@ -28,8 +28,17 @@
         }
 
         .header {
-            text-align: center;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
             margin-bottom: 30px;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+
+        .title-section {
+            flex: 1;
+            text-align: center;
         }
 
         .title {
@@ -55,6 +64,125 @@
             text-align: center;
             width: 100%;
             max-width: 500px;
+        }
+
+        .timer-container {
+            background: white;
+            padding: 20px;
+            border-radius: 15px;
+            border: 3px solid #667eea;
+            min-width: 300px;
+        }
+
+        .timer-controls {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .timer-input-group {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .timer-label {
+            color: #667eea;
+            font-size: 12px;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        .timer-input {
+            width: 60px;
+            padding: 8px;
+            font-size: 16px;
+            text-align: center;
+            border: 2px solid #667eea;
+            border-radius: 8px;
+            background: white;
+        }
+
+        .timer-input:focus {
+            outline: none;
+            border-color: #764ba2;
+        }
+
+        .timer-display {
+            font-size: 48px;
+            font-weight: bold;
+            color: #667eea;
+            text-align: center;
+            font-family: 'Courier New', monospace;
+            margin-bottom: 15px;
+            min-height: 60px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .timer-display.timeout {
+            color: #f44336;
+            animation: pulse 1s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+        }
+
+        .timer-buttons {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+        }
+
+        .timer-btn {
+            padding: 10px 20px;
+            font-size: 14px;
+            border: 2px solid;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s;
+            background: white;
+        }
+
+        .timer-btn.start {
+            border-color: #4CAF50;
+            color: #4CAF50;
+        }
+
+        .timer-btn.start:hover {
+            background: #4CAF50;
+            color: white;
+        }
+
+        .timer-btn.pause {
+            border-color: #ff9800;
+            color: #ff9800;
+        }
+
+        .timer-btn.pause:hover {
+            background: #ff9800;
+            color: white;
+        }
+
+        .timer-btn.reset {
+            border-color: #f44336;
+            color: #f44336;
+        }
+
+        .timer-btn.reset:hover {
+            background: #f44336;
+            color: white;
+        }
+
+        .timer-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
         }
 
         .controls {
@@ -279,12 +407,24 @@
                 padding: 20px;
             }
 
+            .header {
+                flex-direction: column;
+            }
+
             .title {
                 font-size: 1.5em;
             }
 
             .title-input {
                 font-size: 1.5em;
+            }
+
+            .timer-container {
+                min-width: 100%;
+            }
+
+            .timer-display {
+                font-size: 36px;
             }
 
             .point-selector {
@@ -311,7 +451,34 @@
 <body>
     <div class="container">
         <div class="header">
-            <h1 class="title" id="dashboardTitle" onclick="editTitle()">Score Dashboard</h1>
+            <div class="title-section">
+                <h1 class="title" id="dashboardTitle" onclick="editTitle()">Score Dashboard</h1>
+            </div>
+
+            <div class="timer-container">
+                <div class="timer-controls">
+                    <div class="timer-input-group">
+                        <div class="timer-label">HOURS</div>
+                        <input type="number" id="hoursInput" class="timer-input" min="0" max="23" value="0">
+                    </div>
+                    <div class="timer-input-group">
+                        <div class="timer-label">MINUTES</div>
+                        <input type="number" id="minutesInput" class="timer-input" min="0" max="59" value="0">
+                    </div>
+                    <div class="timer-input-group">
+                        <div class="timer-label">SECONDS</div>
+                        <input type="number" id="secondsInput" class="timer-input" min="0" max="59" value="0">
+                    </div>
+                </div>
+                
+                <div class="timer-display" id="timerDisplay">00:00:00</div>
+                
+                <div class="timer-buttons">
+                    <button class="timer-btn start" id="startBtn" onclick="startTimer()">▶ Start</button>
+                    <button class="timer-btn pause" id="pauseBtn" onclick="pauseTimer()" disabled>⏸ Pause</button>
+                    <button class="timer-btn reset" id="resetBtn" onclick="resetTimer()">⟲ Reset</button>
+                </div>
+            </div>
         </div>
 
         <div class="controls">
@@ -341,6 +508,81 @@
         let groups = [];
         let dashboardTitle = "Score Dashboard";
         let pointValue = 10; // Default point value
+
+        // Timer functionality
+        let timerInterval = null;
+        let totalSeconds = 0;
+        let isRunning = false;
+
+        function updateDisplay() {
+            const hours = Math.floor(totalSeconds / 3600);
+            const minutes = Math.floor((totalSeconds % 3600) / 60);
+            const seconds = totalSeconds % 60;
+            
+            const display = document.getElementById('timerDisplay');
+            display.textContent = 
+                String(hours).padStart(2, '0') + ':' + 
+                String(minutes).padStart(2, '0') + ':' + 
+                String(seconds).padStart(2, '0');
+            display.classList.remove('timeout');
+        }
+
+        function startTimer() {
+            if (!isRunning) {
+                const hours = parseInt(document.getElementById('hoursInput').value) || 0;
+                const minutes = parseInt(document.getElementById('minutesInput').value) || 0;
+                const seconds = parseInt(document.getElementById('secondsInput').value) || 0;
+                
+                if (totalSeconds === 0) {
+                    totalSeconds = hours * 3600 + minutes * 60 + seconds;
+                }
+                
+                if (totalSeconds > 0) {
+                    isRunning = true;
+                    document.getElementById('startBtn').disabled = true;
+                    document.getElementById('pauseBtn').disabled = false;
+                    document.getElementById('hoursInput').disabled = true;
+                    document.getElementById('minutesInput').disabled = true;
+                    document.getElementById('secondsInput').disabled = true;
+                    
+                    timerInterval = setInterval(() => {
+                        if (totalSeconds > 0) {
+                            totalSeconds--;
+                            updateDisplay();
+                        } else {
+                            pauseTimer();
+                            const display = document.getElementById('timerDisplay');
+                            display.textContent = 'TIME OUT!';
+                            display.classList.add('timeout');
+                        }
+                    }, 1000);
+                } else {
+                    alert('Please set a time first!');
+                }
+            }
+        }
+
+        function pauseTimer() {
+            isRunning = false;
+            clearInterval(timerInterval);
+            document.getElementById('startBtn').disabled = false;
+            document.getElementById('pauseBtn').disabled = true;
+        }
+
+        function resetTimer() {
+            pauseTimer();
+            totalSeconds = 0;
+            updateDisplay();
+            document.getElementById('hoursInput').value = 0;
+            document.getElementById('minutesInput').value = 0;
+            document.getElementById('secondsInput').value = 0;
+            document.getElementById('hoursInput').disabled = false;
+            document.getElementById('minutesInput').disabled = false;
+            document.getElementById('secondsInput').disabled = false;
+        }
+
+        // Initialize timer display
+        updateDisplay();
 
         // Change point value
         function changePointValue(value) {
