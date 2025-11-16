@@ -71,12 +71,12 @@
             padding: 20px;
             border-radius: 15px;
             border: 3px solid #667eea;
-            min-width: 300px;
+            min-width: 280px;
         }
 
         .timer-controls {
             display: flex;
-            gap: 10px;
+            gap: 15px;
             margin-bottom: 15px;
             justify-content: center;
             flex-wrap: wrap;
@@ -96,9 +96,9 @@
         }
 
         .timer-input {
-            width: 60px;
+            width: 70px;
             padding: 8px;
-            font-size: 16px;
+            font-size: 18px;
             text-align: center;
             border: 2px solid #667eea;
             border-radius: 8px;
@@ -126,6 +126,7 @@
         .timer-display.timeout {
             color: #f44336;
             animation: pulse 1s infinite;
+            font-size: 36px;
         }
 
         @keyframes pulse {
@@ -458,12 +459,8 @@
             <div class="timer-container">
                 <div class="timer-controls">
                     <div class="timer-input-group">
-                        <div class="timer-label">HOURS</div>
-                        <input type="number" id="hoursInput" class="timer-input" min="0" max="23" value="0">
-                    </div>
-                    <div class="timer-input-group">
                         <div class="timer-label">MINUTES</div>
-                        <input type="number" id="minutesInput" class="timer-input" min="0" max="59" value="0">
+                        <input type="number" id="minutesInput" class="timer-input" min="0" max="99" value="0">
                     </div>
                     <div class="timer-input-group">
                         <div class="timer-label">SECONDS</div>
@@ -471,7 +468,7 @@
                     </div>
                 </div>
                 
-                <div class="timer-display" id="timerDisplay">00:00:00</div>
+                <div class="timer-display" id="timerDisplay">00:00</div>
                 
                 <div class="timer-buttons">
                     <button class="timer-btn start" id="startBtn" onclick="startTimer()">▶ Start</button>
@@ -515,13 +512,11 @@
         let isRunning = false;
 
         function updateDisplay() {
-            const hours = Math.floor(totalSeconds / 3600);
-            const minutes = Math.floor((totalSeconds % 3600) / 60);
+            const minutes = Math.floor(totalSeconds / 60);
             const seconds = totalSeconds % 60;
             
             const display = document.getElementById('timerDisplay');
             display.textContent = 
-                String(hours).padStart(2, '0') + ':' + 
                 String(minutes).padStart(2, '0') + ':' + 
                 String(seconds).padStart(2, '0');
             display.classList.remove('timeout');
@@ -529,19 +524,17 @@
 
         function startTimer() {
             if (!isRunning) {
-                const hours = parseInt(document.getElementById('hoursInput').value) || 0;
                 const minutes = parseInt(document.getElementById('minutesInput').value) || 0;
                 const seconds = parseInt(document.getElementById('secondsInput').value) || 0;
                 
                 if (totalSeconds === 0) {
-                    totalSeconds = hours * 3600 + minutes * 60 + seconds;
+                    totalSeconds = minutes * 60 + seconds;
                 }
                 
                 if (totalSeconds > 0) {
                     isRunning = true;
                     document.getElementById('startBtn').disabled = true;
                     document.getElementById('pauseBtn').disabled = false;
-                    document.getElementById('hoursInput').disabled = true;
                     document.getElementById('minutesInput').disabled = true;
                     document.getElementById('secondsInput').disabled = true;
                     
@@ -552,7 +545,7 @@
                         } else {
                             pauseTimer();
                             const display = document.getElementById('timerDisplay');
-                            display.textContent = 'TIME OUT!';
+                            display.textContent = "Time's Up!";
                             display.classList.add('timeout');
                         }
                     }, 1000);
@@ -573,10 +566,8 @@
             pauseTimer();
             totalSeconds = 0;
             updateDisplay();
-            document.getElementById('hoursInput').value = 0;
             document.getElementById('minutesInput').value = 0;
             document.getElementById('secondsInput').value = 0;
-            document.getElementById('hoursInput').disabled = false;
             document.getElementById('minutesInput').disabled = false;
             document.getElementById('secondsInput').disabled = false;
         }
